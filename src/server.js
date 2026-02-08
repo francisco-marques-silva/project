@@ -48,8 +48,10 @@ app.use(async (req, res, next) => {
   next();
 });
 
-// ===== Static files =====
-app.use(express.static(path.join(__dirname, '..', 'frontend')));
+// ===== Static files (local only - Vercel serves these directly) =====
+if (!process.env.VERCEL) {
+  app.use(express.static(path.join(__dirname, '..', 'frontend')));
+}
 
 // ===== API Routes =====
 app.use('/api/auth', authRoutes);
@@ -69,16 +71,18 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString(), version: '1.0.0' });
 });
 
-// ===== Frontend routes (SPA fallback) =====
-app.get('/login', (req, res) => res.sendFile(path.join(__dirname, '..', 'frontend', 'login.html')));
-app.get('/portal', (req, res) => res.sendFile(path.join(__dirname, '..', 'frontend', 'portal.html')));
-app.get('/search-review', (req, res) => res.sendFile(path.join(__dirname, '..', 'frontend', 'search-review.html')));
-app.get('/data-analysis', (req, res) => res.sendFile(path.join(__dirname, '..', 'frontend', 'data-analysis.html')));
+// ===== Frontend routes (local only - Vercel handles these via vercel.json) =====
+if (!process.env.VERCEL) {
+  app.get('/login', (req, res) => res.sendFile(path.join(__dirname, '..', 'frontend', 'login.html')));
+  app.get('/portal', (req, res) => res.sendFile(path.join(__dirname, '..', 'frontend', 'portal.html')));
+  app.get('/search-review', (req, res) => res.sendFile(path.join(__dirname, '..', 'frontend', 'search-review.html')));
+  app.get('/data-analysis', (req, res) => res.sendFile(path.join(__dirname, '..', 'frontend', 'data-analysis.html')));
 
-app.get('*', (req, res) => {
-  if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'Endpoint not found' });
-  res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
-});
+  app.get('*', (req, res) => {
+    if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'Endpoint not found' });
+    res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
+  });
+}
 
 // ===== Error handling =====
 app.use((err, req, res, next) => {

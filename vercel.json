@@ -2,18 +2,22 @@
   "version": 2,
   "builds": [
     {
-      "src": "src/server.js",
+      "src": "api/index.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "frontend/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "src/server.js"
+      "dest": "api/index.js"
     },
     {
       "src": "/health",
-      "dest": "src/server.js"
+      "dest": "api/index.js"
     },
     {
       "src": "/(css|js)/(.*)",
@@ -24,8 +28,24 @@
       "dest": "frontend/$1"
     },
     {
+      "src": "/login",
+      "dest": "frontend/login.html"
+    },
+    {
+      "src": "/portal",
+      "dest": "frontend/portal.html"
+    },
+    {
+      "src": "/search-review",
+      "dest": "frontend/search-review.html"
+    },
+    {
+      "src": "/data-analysis",
+      "dest": "frontend/data-analysis.html"
+    },
+    {
       "src": "/(.*)",
-      "dest": "src/server.js"
+      "dest": "frontend/index.html"
     }
   ]
 }
