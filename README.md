@@ -114,11 +114,11 @@ Create/edit the `.env` file with your credentials:
 # Database - Choose ONE option:
 
 # Option A: Local PostgreSQL
-DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/mvp_db
+POSTGRES_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/mvp_db
 
 # Option B: Supabase (cloud PostgreSQL)
 # Get from: Supabase Dashboard -> Project Settings -> Database -> Connection string
-# DATABASE_URL=postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres
+# POSTGRES_URL=postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres
 
 # LLM API Keys (at least one for AI screening)
 OPENAI_API_KEY=sk-proj-...
@@ -147,7 +147,7 @@ CREATE DATABASE mvp_db;
 1. Create a project at [supabase.com](https://supabase.com)
 2. Go to Project Settings → Database
 3. Copy the "Connection string" (Transaction mode recommended)
-4. Paste as `DATABASE_URL` in `.env`
+4. Paste as `POSTGRES_URL` in `.env`
 
 4. **Start the server** (auto-syncs database):
 ```bash
@@ -358,7 +358,7 @@ users (1) ──────< projects (N)
 Set these in your deployment platform:
 
 ```env
-DATABASE_URL=postgresql://user:pass@host:5432/dbname
+POSTGRES_URL=postgresql://user:pass@host:5432/dbname
 OPENAI_API_KEY=sk-...
 ANTHROPIC_API_KEY=sk-ant-...
 GEMINI_API_KEY=AI...
@@ -412,7 +412,7 @@ npm run dev
 
 ### Database connection errors
 - Ensure PostgreSQL is running
-- Verify `DATABASE_URL` in `.env`
+- Verify `POSTGRES_URL` in `.env`
 - Check database exists: `psql -l`
 
 ### Search not working

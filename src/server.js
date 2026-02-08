@@ -52,7 +52,7 @@ app.use(async (req, res, next) => {
   const ok = await ensureModels();
   if (!ok) {
     return res.status(503).json({ 
-      error: 'Database connection failed. Please check DATABASE_URL configuration.',
+      error: 'Database connection failed. Please check POSTGRES_URL configuration.',
       detail: modelsError 
     });
   }
@@ -107,7 +107,7 @@ if (process.env.VERCEL !== '1') {
     try {
       const dbOk = await testConnection();
       if (!dbOk) {
-        console.error('Failed to connect to database. Check DATABASE_URL in .env');
+        console.error('Failed to connect to database. Check POSTGRES_URL in .env');
         process.exit(1);
       }
 
