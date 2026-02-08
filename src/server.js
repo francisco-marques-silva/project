@@ -37,8 +37,10 @@ async function ensureModels() {
   try {
     await testConnection();
     require('./models');
+    const { sequelize } = require('./core/database');
+    await sequelize.sync({ alter: false });
     modelsLoaded = true;
-    console.log('✅ Models loaded successfully.');
+    console.log('✅ Models loaded and synced successfully.');
     return true;
   } catch (error) {
     modelsError = error.message;
