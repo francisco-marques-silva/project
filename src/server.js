@@ -1,0 +1,97 @@
+require('dotenv').config();
+
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const morgan = require('morgan');
+const path = require('path');
+
+const config = require('./core/config');
+const { testConnection } = require('./core/database');
+
+// Import routes
+const authRoutes = require('./api/auth');
+const databaseRoutes = require('./api/databases');
+const spreadsheetRoutes = require('./api/spreadsheets');
+const analysisRoutes = require('./api/analysis');
+const dashboardRoutes = require('./api/dashboard');
+const configRoutes = require('./api/config');
+const backupRoutes = require('./api/backup');
+const dataAnalysisRoutes = require('./api/dataAnalysis');
+
+const app = express();
+
+// ===== Middleware =====
+app.use(helmet({ contentSecurityPolicy: false, crossOriginEmbedderPolicy: false }));
+app.use(cors());
+app.use(morgan('dev'));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// ===== Static files =====
+app.use(express.static(path.join(__dirname, '..', 'frontend')));
+
+// ===== API Routes =====
+app.use('/api/auth', authRoutes);
+app.use('/api/databases', databaseRoutes);
+app.use('/api/spreadsheets', spreadsheetRoutes);
+app.use('/api/analysis', analysisRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/config', configRoutes);
+app.use('/api/backup', backupRoutes);
+app.use('/api/data-analysis', dataAnalysisRoutes);
+
+// ===== Health checks =====
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString(), version: '1.0.0' });
+});
+
+// ===== Frontend routes (SPA fallback) =====
+app.get('/login', (req, res) => res.sendFile(path.join(__dirname, '..', 'frontend', 'login.html')));
+app.get('/portal', (req, res) => res.sendFile(path.join(__dirname, '..', 'frontend', 'portal.html')));
+app.get('/search-review', (req, res) => res.sendFile(path.join(__dirname, '..', 'frontend', 'search-review.html')));
+app.get('/data-analysis', (req, res) => res.sendFile(path.join(__dirname, '..', 'frontend', 'data-analysis.html')));
+
+app.get('*', (req, res) => {
+  if (req.path.startsWith('/api/')) return res.status(404).json({ error: 'Endpoint not found' });
+  res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
+});
+
+// ===== Error handling =====
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
+// ===== Start server =====
+async function startServer() {
+  try {
+    const dbOk = await testConnection();
+    if (!dbOk) {
+      console.error('Failed to connect to database. Check DATABASE_URL in .env');
+      process.exit(1);
+    }
+
+    // Load models/associations (no sync - tables already exist from migration)
+    require('./models');
+    console.log('✅ Models loaded successfully.');
+
+    const PORT = config.port;
+    app.listen(PORT, () => {
+      console.log(`\n🚀 Research Portal running at http://localhost:${PORT}`);
+      console.log(`📊 Dashboard: http://localhost:${PORT}/portal`);
+      console.log(`🔍 Search & Review: http://localhost:${PORT}/search-review`);
+      console.log(`📈 Data Analysis: http://localhost:${PORT}/data-analysis`);
+      console.log(`❤️  Health check: http://localhost:${PORT}/health\n`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
+module.exports = app;

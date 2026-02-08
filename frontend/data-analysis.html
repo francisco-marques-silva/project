@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Analysis - Research Portal</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <h1>🔬 Research Portal</h1>
+    </div>
+    <div class="navbar-menu">
+      <a href="/portal" class="nav-link">📊 Dashboard</a>
+      <a href="/search-review" class="nav-link">🔍 Search & Review</a>
+      <a href="/data-analysis" class="nav-link active">📈 Data Analysis</a>
+    </div>
+    <div class="navbar-user">
+      <span id="userDisplay"></span>
+      <button id="logoutBtn" class="btn btn-sm btn-outline">Logout</button>
+    </div>
+  </nav>
+
+  <div class="page-container">
+    <div class="section-header">
+      <h2>📈 Data Analysis</h2>
+      <button id="uploadDatasetBtn" class="btn btn-primary">📤 Upload Dataset</button>
+    </div>
+
+    <!-- Upload Modal -->
+    <div id="uploadDatasetModal" class="modal" style="display:none">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Upload Dataset</h3>
+          <button class="modal-close">&times;</button>
+        </div>
+        <form id="uploadDatasetForm">
+          <div class="form-group">
+            <label>Dataset Name</label>
+            <input type="text" id="datasetName" placeholder="My Dataset">
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea id="datasetDescription" rows="2" placeholder="Optional description"></textarea>
+          </div>
+          <div class="form-group">
+            <label>File (XLSX/CSV)</label>
+            <input type="file" id="datasetFile" accept=".xlsx,.csv,.xls" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Upload</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Datasets List -->
+    <div id="datasetsList" class="mt-4">
+      <p class="text-muted">Loading datasets...</p>
+    </div>
+
+    <!-- Dataset Viewer -->
+    <div id="datasetViewer" style="display:none" class="mt-4">
+      <div class="section-header">
+        <div>
+          <button id="backToDatasets" class="btn btn-sm btn-outline">← Back</button>
+          <h3 id="datasetViewerName" class="inline-title"></h3>
+        </div>
+        <button id="deleteDatasetBtn" class="btn btn-sm btn-danger">🗑️ Delete</button>
+      </div>
+      <div class="table-container">
+        <table class="data-table" id="datasetTable">
+          <thead id="datasetTableHead"></thead>
+          <tbody id="datasetTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/notifications.js"></script>
+  <script src="/js/ui.js"></script>
+  <script src="/js/data-analysis.js"></script>
+  <script>
+    // Auth check
+    if (!localStorage.getItem('auth_token')) {
+      window.location.href = '/login';
+    }
+    document.getElementById('userDisplay').textContent = localStorage.getItem('user_name') || 'User';
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.clear();
+      window.location.href = '/login';
+    });
+  </script>
+</body>
+</html>

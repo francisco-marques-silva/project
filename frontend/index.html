@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Research Portal</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <script>
+    // Redirect to portal if logged in, otherwise to login
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      window.location.href = '/portal';
+    } else {
+      window.location.href = '/login';
+    }
+  </script>
+</body>
+</html>

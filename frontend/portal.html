@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal - Research Portal</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <!-- Top Navigation -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <h1>🔬 Research Portal</h1>
+    </div>
+    <div class="navbar-menu">
+      <a href="/search-review" class="nav-link">🔍 Search & Review</a>
+      <a href="/data-analysis" class="nav-link">📈 Data Analysis</a>
+    </div>
+    <div class="navbar-user">
+      <span id="userDisplay"></span>
+      <button id="logoutBtn" class="btn btn-sm btn-outline">Logout</button>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="main-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <nav class="sidebar-nav">
+        <a href="#" class="sidebar-link active" data-section="dashboard"><span class="icon">📊</span> Dashboard</a>
+        <a href="#" class="sidebar-link" data-section="projects"><span class="icon">📁</span> Projects</a>
+        <a href="#" class="sidebar-link" data-section="search"><span class="icon">🔍</span> Search</a>
+        <a href="#" class="sidebar-link" data-section="analysis"><span class="icon">🤖</span> AI Analysis</a>
+        <a href="#" class="sidebar-link" data-section="history"><span class="icon">📜</span> History</a>
+      </nav>
+    </aside>
+
+    <main class="content">
+      <!-- ====== Dashboard Section ====== -->
+      <section id="dashboardSection" class="section active">
+        <h2>📊 Dashboard</h2>
+        <div class="stats-grid" id="statsGrid">
+          <div class="stat-card"><div class="stat-value" id="statProjects">-</div><div class="stat-label">Projects</div></div>
+          <div class="stat-card"><div class="stat-value" id="statSearches">-</div><div class="stat-label">Searches</div></div>
+          <div class="stat-card"><div class="stat-value" id="statArticles">-</div><div class="stat-label">Articles</div></div>
+          <div class="stat-card"><div class="stat-value" id="statScreenings">-</div><div class="stat-label">AI Analyses</div></div>
+          <div class="stat-card"><div class="stat-value" id="statRequests">-</div><div class="stat-label">API Requests</div></div>
+        </div>
+        <div class="card mt-4">
+          <h3>Recent Activity</h3>
+          <div id="activityFeed" class="activity-feed"><p class="text-muted">Loading...</p></div>
+        </div>
+      </section>
+
+      <!-- ====== Projects Section ====== -->
+      <section id="projectsSection" class="section" style="display:none">
+        <div class="section-header">
+          <h2>📁 Projects</h2>
+          <button id="createProjectBtn" class="btn btn-primary">+ New Project</button>
+        </div>
+
+        <!-- Create Project Modal -->
+        <div id="createProjectModal" class="modal" style="display:none">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3>Create New Project</h3>
+              <button class="modal-close">&times;</button>
+            </div>
+            <form id="createProjectForm">
+              <div class="form-group">
+                <label>Project Name *</label>
+                <input type="text" id="projectName" required placeholder="e.g., Systematic Review on COVID-19 Treatments">
+              </div>
+              <div class="form-group">
+                <label>Description</label>
+                <textarea id="projectDescription" rows="3" placeholder="Brief description of the project"></textarea>
+              </div>
+              <div class="form-group">
+                <label>Research Question</label>
+                <textarea id="projectQuestion" rows="3" placeholder="What is the PICO question?"></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary">Create Project</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Project List -->
+        <div id="projectList" class="project-list"><p class="text-muted">Loading projects...</p></div>
+
+        <!-- Project Details View -->
+        <div id="projectDetails" class="project-details" style="display:none">
+          <div class="section-header">
+            <div>
+              <button id="backToProjects" class="btn btn-sm btn-outline">← Back</button>
+              <h3 id="projectDetailName" class="inline-title"></h3>
+              <button class="btn btn-xs btn-outline" onclick="Spreadsheets.editProject()" title="Edit project info">✏️</button>
+            </div>
+            <div class="btn-group">
+              <button id="uploadToProject" class="btn btn-sm btn-outline">📤 Upload File</button>
+              <button id="downloadProject" class="btn btn-sm btn-outline">📥 Download XLSX</button>
+              <button id="addArticleBtn" class="btn btn-sm btn-primary">+ Add Article</button>
+              <button id="deleteProjectBtn" class="btn btn-sm btn-danger">🗑️ Delete</button>
+            </div>
+          </div>
+          <p id="projectDetailDesc" class="text-muted"></p>
+          <p id="projectDetailQuestion" class="text-muted"></p>
+
+          <!-- Upload form (hidden) -->
+          <div id="uploadForm" style="display:none" class="card mt-2">
+            <h4>Upload Articles (XLSX/CSV)</h4>
+            <p class="text-sm text-muted mt-1">Supported columns: Title, Abstract, Authors, Journal, Year, DOI, PMID, Keywords, etc.</p>
+            <input type="file" id="uploadFileInput" accept=".xlsx,.csv,.xls" class="mt-1">
+            <button id="uploadFileBtn" class="btn btn-primary btn-sm mt-1">📤 Upload</button>
+          </div>
+
+          <!-- Articles table -->
+          <div class="table-container mt-2">
+            <div class="table-controls">
+              <input type="text" id="articleSearch" placeholder="Search articles..." class="input-search">
+              <span id="articleCount" class="text-muted"></span>
+            </div>
+            <table class="data-table" id="articlesTable">
+              <thead>
+                <tr></tr>
+              </thead>
+              <tbody id="articlesBody"></tbody>
+            </table>
+            <div id="articlesPagination" class="pagination"></div>
+          </div>
+        </div>
+
+        <!-- ===== Add Article Modal ===== -->
+        <div id="addArticleModal" class="modal" style="display:none">
+          <div class="modal-content" style="max-width:650px">
+            <div class="modal-header">
+              <h3>Add Article Manually</h3>
+              <button class="modal-close">&times;</button>
+            </div>
+            <form id="addArticleForm">
+              <div class="form-group">
+                <label>Title *</label>
+                <input type="text" id="addTitle" required placeholder="Full article title">
+              </div>
+              <div class="form-group">
+                <label>Authors</label>
+                <input type="text" id="addAuthors" placeholder="e.g., Smith J; Doe A; Lee B">
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Year</label>
+                  <input type="number" id="addYear" placeholder="2024" min="1900" max="2030">
+                </div>
+                <div class="form-group">
+                  <label>Journal</label>
+                  <input type="text" id="addJournal" placeholder="Journal name">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>DOI</label>
+                  <input type="text" id="addDoi" placeholder="10.xxxx/xxxxx">
+                </div>
+                <div class="form-group">
+                  <label>PMID</label>
+                  <input type="text" id="addPmid" placeholder="PubMed ID">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Abstract *</label>
+                <textarea id="addAbstract" rows="4" required placeholder="Article abstract..."></textarea>
+              </div>
+              <div class="form-group">
+                <label>Keywords</label>
+                <input type="text" id="addKeywords" placeholder="keyword1; keyword2; keyword3">
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Publication Type</label>
+                  <select id="addPubType">
+                    <option value="">Select...</option>
+                    <option>Journal Article</option>
+                    <option>Review</option>
+                    <option>Systematic Review</option>
+                    <option>Meta-Analysis</option>
+                    <option>Randomized Controlled Trial</option>
+                    <option>Clinical Trial</option>
+                    <option>Case Reports</option>
+                    <option>Other</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Language</label>
+                  <input type="text" id="addLanguage" placeholder="e.g., English" value="English">
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Volume</label>
+                  <input type="text" id="addVolume" placeholder="Vol.">
+                </div>
+                <div class="form-group">
+                  <label>Issue</label>
+                  <input type="text" id="addIssue" placeholder="Issue">
+                </div>
+                <div class="form-group">
+                  <label>Pages</label>
+                  <input type="text" id="addPages" placeholder="e.g., 1-15">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>URL</label>
+                <input type="text" id="addUrl" placeholder="https://...">
+              </div>
+              <div class="btn-group mt-2">
+                <button type="submit" class="btn btn-primary">Add Article</button>
+                <button type="button" class="btn btn-outline" onclick="UI.hideModal('addArticleModal')">Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- ===== View Article Modal ===== -->
+        <div id="viewArticleModal" class="modal" style="display:none">
+          <div class="modal-content" style="max-width:700px">
+            <div class="modal-header">
+              <h3>Article Details</h3>
+              <button class="modal-close">&times;</button>
+            </div>
+            <div class="article-detail">
+              <h4 id="viewTitle" style="margin-bottom:0.75rem;color:var(--primary)"></h4>
+              <p><strong>Authors:</strong> <span id="viewAuthors"></span></p>
+              <p><strong>Journal:</strong> <span id="viewJournal"></span></p>
+              <p><strong>DOI:</strong> <a id="viewDoi" href="#" target="_blank"></a></p>
+              <p><strong>PMID:</strong> <span id="viewPmid"></span></p>
+              <p><strong>Keywords:</strong> <span id="viewKeywords"></span></p>
+              <p><strong>Source:</strong> <span id="viewSource" class="badge badge-sm"></span>
+                 <strong style="margin-left:1rem">Status:</strong> <span id="viewStatus" class="badge badge-sm"></span></p>
+              <hr style="margin:1rem 0;border:none;border-top:1px solid var(--border)">
+              <p><strong>Abstract:</strong></p>
+              <p id="viewAbstract" style="color:var(--text-light);line-height:1.7;max-height:300px;overflow-y:auto"></p>
+              <hr style="margin:1rem 0;border:none;border-top:1px solid var(--border)">
+              <h4 style="margin-bottom:0.5rem;">🤖 AI Screening Results</h4>
+              <div id="viewScreeningResults"><p class="text-muted">No screening results yet.</p></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== Edit Project Modal ===== -->
+        <div id="editProjectModal" class="modal" style="display:none">
+          <div class="modal-content" style="max-width:500px">
+            <div class="modal-header">
+              <h3>Edit Project</h3>
+              <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+              <div class="form-group">
+                <label>Project Name *</label>
+                <input type="text" id="editProjectName" required>
+              </div>
+              <div class="form-group">
+                <label>Description</label>
+                <textarea id="editProjectDesc" rows="3"></textarea>
+              </div>
+              <div class="form-group">
+                <label>Research Question</label>
+                <textarea id="editProjectQuestion" rows="3"></textarea>
+              </div>
+              <div class="form-actions" style="margin-top:1rem;">
+                <button type="button" class="btn btn-outline" onclick="UI.hideModal('editProjectModal')">Cancel</button>
+                <button type="button" id="saveProjectEditBtn" class="btn btn-primary" onclick="Spreadsheets.saveProjectEdits()">💾 Save</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====== Search Section ====== -->
+      <section id="searchSection" class="section" style="display:none">
+        <h2>🔍 Search Databases</h2>
+        <form id="searchForm" class="card">
+          <div class="form-group">
+            <label>Search Query *</label>
+            <textarea id="searchQuery" rows="3" required placeholder='e.g., ("machine learning" OR "artificial intelligence") AND ("cancer" OR "oncology")'></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Year From</label>
+              <input type="number" id="yearStart" placeholder="2020" min="1900" max="2030">
+            </div>
+            <div class="form-group">
+              <label>Year To</label>
+              <input type="number" id="yearEnd" placeholder="2026" min="1900" max="2030">
+            </div>
+            <div class="form-group">
+              <label>Max Results</label>
+              <input type="number" id="maxResults" value="100" min="1" max="10000">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Target Project *</label>
+            <select id="searchProject" required>
+              <option value="">Select a project...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Databases</label>
+            <div class="checkbox-group" id="databaseCheckboxes"></div>
+          </div>
+          <button type="submit" class="btn btn-primary" id="searchBtn">🔍 Search</button>
+        </form>
+        <div id="searchResults" class="mt-4" style="display:none">
+          <h3>Search Results</h3>
+          <div id="searchResultsContent"></div>
+        </div>
+      </section>
+
+      <!-- ====== AI Analysis Section ====== -->
+      <section id="analysisSection" class="section" style="display:none">
+        <h2>🤖 AI Analysis</h2>
+        <form id="analysisForm" class="card">
+          <div class="form-group">
+            <label>Select Project *</label>
+            <select id="analysisProject" required><option value="">Select a project...</option></select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>AI Provider *</label>
+              <select id="analysisProvider" required><option value="">Select provider...</option></select>
+            </div>
+            <div class="form-group">
+              <label>Model</label>
+              <select id="analysisModel"><option value="">Default</option></select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>PICO Question *</label>
+            <textarea id="picoQuestion" rows="3" required placeholder="What is the effect of [Intervention] on [Outcome] in [Population] compared to [Comparison]?"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Inclusion Criteria</label>
+            <textarea id="inclusionCriteria" rows="3" placeholder="e.g., RCTs, human studies, English language, published after 2010"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Exclusion Criteria</label>
+            <textarea id="exclusionCriteria" rows="3" placeholder="e.g., Animal studies, case reports, non-English, pediatric population"></textarea>
+          </div>
+          <div class="btn-group">
+            <button type="button" id="previewPromptBtn" class="btn btn-outline">👁️ Preview Prompt</button>
+            <button type="button" id="testSingleBtn" class="btn btn-outline">🧪 Test Single</button>
+            <button type="button" id="runBatchBtn" class="btn btn-primary">🚀 Run Full Analysis</button>
+          </div>
+        </form>
+
+        <div id="batchProgress" class="card mt-4" style="display:none">
+          <h3>Batch Analysis Progress</h3>
+          <div class="progress-bar-container">
+            <div id="batchProgressBar" class="progress-bar" style="width:0%"></div>
+          </div>
+          <div id="batchStats" class="batch-stats"></div>
+          <div id="batchResults" class="batch-results"></div>
+        </div>
+
+        <!-- Prompt Preview Modal -->
+        <div id="promptPreviewModal" class="modal" style="display:none">
+          <div class="modal-content" style="max-width:750px">
+            <div class="modal-header">
+              <h3>👁️ Prompt Preview</h3>
+              <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+              <pre id="promptPreviewContent" class="code-block" style="max-height:500px;overflow-y:auto;white-space:pre-wrap;font-size:0.85em;"></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- Single Test Result Modal -->
+        <div id="singleTestModal" class="modal" style="display:none">
+          <div class="modal-content" style="max-width:700px">
+            <div class="modal-header">
+              <h3>🧪 Single Test Result</h3>
+              <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+              <div id="singleTestContent"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ====== History Section ====== -->
+      <section id="historySection" class="section" style="display:none">
+        <h2>📜 History</h2>
+        <div id="tokenUsageSummary" class="card mb-4" style="display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;margin-bottom:1rem;">
+            <h3 style="margin:0;">🔢 Token Usage by Model</h3>
+            <div style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+              <input type="date" id="tokenDateFrom" class="input-sm" title="From date">
+              <span class="text-muted">—</span>
+              <input type="date" id="tokenDateTo" class="input-sm" title="To date">
+              <button class="btn btn-xs btn-primary" onclick="History.loadTokenUsage()">Filter</button>
+              <button class="btn btn-xs btn-outline" onclick="History.clearTokenFilter()">Clear</button>
+            </div>
+          </div>
+          <div id="tokenUsageContent"></div>
+        </div>
+        <div id="historyContent"><p class="text-muted">Loading history...</p></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script src="/js/api.js"></script>
+  <script src="/js/notifications.js"></script>
+  <script src="/js/ui.js"></script>
+  <script src="/js/dashboard.js"></script>
+  <script src="/js/search.js"></script>
+  <script src="/js/spreadsheets.js"></script>
+  <script src="/js/analysis.js"></script>
+  <script src="/js/history.js"></script>
+  <script src="/js/portal.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
