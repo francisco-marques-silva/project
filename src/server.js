@@ -66,32 +66,56 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-// ===== Start server =====
-async function startServer() {
+// ===== Initialize models (lazy, once) =====
+let modelsLoaded = false;
+async function ensureModels() {
+  if (modelsLoaded) return;
   try {
-    const dbOk = await testConnection();
-    if (!dbOk) {
-      console.error('Failed to connect to database. Check DATABASE_URL in .env');
-      process.exit(1);
-    }
-
-    // Load models/associations (no sync - tables already exist from migration)
+    await testConnection();
     require('./models');
+    modelsLoaded = true;
     console.log('✅ Models loaded successfully.');
-
-    const PORT = config.port;
-    app.listen(PORT, () => {
-      console.log(`\n🚀 Research Portal running at http://localhost:${PORT}`);
-      console.log(`📊 Dashboard: http://localhost:${PORT}/portal`);
-      console.log(`🔍 Search & Review: http://localhost:${PORT}/search-review`);
-      console.log(`📈 Data Analysis: http://localhost:${PORT}/data-analysis`);
-      console.log(`❤️  Health check: http://localhost:${PORT}/health\n`);
-    });
   } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
+    console.error('❌ Failed to initialize models:', error.message);
   }
 }
 
-startServer();
+// Middleware to ensure models are loaded before handling requests
+app.use(async (req, res, next) => {
+  await ensureModels();
+  next();
+});
+
+// ===== Start server (only when running locally, not on Vercel) =====
+if (process.env.VERCEL !== '1') {
+  async function startServer() {
+    try {
+      const dbOk = await testConnection();
+      if (!dbOk) {
+        console.error('Failed to connect to database. Check DATABASE_URL in .env');
+        process.exit(1);
+      }
+
+      require('./models');
+      modelsLoaded = true;
+      console.log('✅ Models loaded successfully.');
+
+      const PORT = config.port;
+      app.listen(PORT, () => {
+        console.log(`\n🚀 Research Portal running at http://localhost:${PORT}`);
+        console.log(`📊 Dashboard: http://localhost:${PORT}/portal`);
+        console.log(`🔍 Search & Review: http://localhost:${PORT}/search-review`);
+        console.log(`📈 Data Analysis: http://localhost:${PORT}/data-analysis`);
+        console.log(`❤️  Health check: http://localhost:${PORT}/health\n`);
+      });
+    } catch (error) {
+      console.error('Failed to start server:', error);
+      process.exit(1);
+    }
+  }
+
+  startServer();
+}
+
+// Export for Vercel serverless
 module.exports = app;
