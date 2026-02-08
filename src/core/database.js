@@ -9,12 +9,16 @@ if (config.database.url && !config.database.url.includes('localhost')) {
   pg.defaults.ssl = { rejectUnauthorized: false };
 }
 
-// Remove sslmode from URL to avoid conflicts with dialectOptions
+// Clean sslmode from URL to avoid conflicts with dialectOptions
 let dbUrl = config.database.url;
 if (dbUrl) {
-  dbUrl = dbUrl.replace(/[?&]sslmode=[^&]*/g, '');
-  // Clean up trailing ? if sslmode was the only param
-  dbUrl = dbUrl.replace(/\?$/, '');
+  try {
+    const url = new URL(dbUrl);
+    url.searchParams.delete('sslmode');
+    dbUrl = url.toString();
+  } catch (e) {
+    // If URL parsing fails, use as-is
+  }
 }
 
 const sequelize = new Sequelize(dbUrl, {
