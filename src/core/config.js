@@ -23,7 +23,7 @@ const config = {
     },
     dialectOptions: {
       ssl: databaseUrl && !databaseUrl.includes('localhost')
-        ? { require: true, rejectUnauthorized: false }
+        ? { rejectUnauthorized: false }
         : false
     }
   },
