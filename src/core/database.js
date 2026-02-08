@@ -1,6 +1,9 @@
 const { Sequelize } = require('sequelize');
 const config = require('./config');
 
+// Explicit require so Vercel's bundler includes pg in the build
+require('pg');
+
 const sequelize = new Sequelize(config.database.url, {
   dialect: config.database.dialect,
   logging: config.database.logging,
