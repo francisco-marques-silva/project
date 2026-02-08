@@ -30,21 +30,32 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // ===== Initialize models (lazy, once for Vercel) =====
 let modelsLoaded = false;
+let modelsError = null;
 async function ensureModels() {
-  if (modelsLoaded) return;
+  if (modelsLoaded) return true;
+  if (modelsError) return false;
   try {
     await testConnection();
     require('./models');
     modelsLoaded = true;
     console.log('✅ Models loaded successfully.');
+    return true;
   } catch (error) {
+    modelsError = error.message;
     console.error('❌ Failed to initialize models:', error.message);
+    return false;
   }
 }
 
 // Middleware to ensure models are loaded before handling requests
 app.use(async (req, res, next) => {
-  await ensureModels();
+  const ok = await ensureModels();
+  if (!ok) {
+    return res.status(503).json({ 
+      error: 'Database connection failed. Please check DATABASE_URL configuration.',
+      detail: modelsError 
+    });
+  }
   next();
 });
 

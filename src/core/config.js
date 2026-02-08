@@ -14,7 +14,7 @@ const config = {
       idle: 10000
     },
     dialectOptions: {
-      ssl: process.env.DATABASE_URL && process.env.DATABASE_URL.includes('supabase')
+      ssl: process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('localhost')
         ? { require: true, rejectUnauthorized: false }
         : false
     }
