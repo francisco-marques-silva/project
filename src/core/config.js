@@ -1,10 +1,17 @@
 require('dotenv').config();
 
+// Vercel Supabase integration uses POSTGRES_URL, POSTGRES_PRISMA_URL, etc.
+// Fallback chain: DATABASE_URL -> POSTGRES_URL -> POSTGRES_PRISMA_URL -> POSTGRES_URL_NON_POOLING
+const databaseUrl = process.env.DATABASE_URL 
+  || process.env.POSTGRES_URL 
+  || process.env.POSTGRES_PRISMA_URL 
+  || process.env.POSTGRES_URL_NON_POOLING;
+
 const config = {
   port: parseInt(process.env.PORT) || 8000,
   
   database: {
-    url: process.env.DATABASE_URL,
+    url: databaseUrl,
     dialect: 'postgres',
     logging: false,
     pool: {
@@ -14,7 +21,7 @@ const config = {
       idle: 10000
     },
     dialectOptions: {
-      ssl: process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('localhost')
+      ssl: databaseUrl && !databaseUrl.includes('localhost')
         ? { require: true, rejectUnauthorized: false }
         : false
     }
