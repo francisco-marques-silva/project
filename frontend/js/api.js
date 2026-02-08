@@ -36,7 +36,8 @@ class API {
 
     const response = await fetch(`${this.baseUrl}${url}`, config);
 
-    if (response.status === 401) {
+    // Only redirect on 401 if it's NOT an auth endpoint (login/register)
+    if (response.status === 401 && !url.includes('/api/auth/login') && !url.includes('/api/auth/register')) {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('user_name');
       window.location.href = '/login';
