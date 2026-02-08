@@ -28,6 +28,26 @@ app.use(morgan('dev'));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
+// ===== Initialize models (lazy, once for Vercel) =====
+let modelsLoaded = false;
+async function ensureModels() {
+  if (modelsLoaded) return;
+  try {
+    await testConnection();
+    require('./models');
+    modelsLoaded = true;
+    console.log('✅ Models loaded successfully.');
+  } catch (error) {
+    console.error('❌ Failed to initialize models:', error.message);
+  }
+}
+
+// Middleware to ensure models are loaded before handling requests
+app.use(async (req, res, next) => {
+  await ensureModels();
+  next();
+});
+
 // ===== Static files =====
 app.use(express.static(path.join(__dirname, '..', 'frontend')));
 
@@ -64,26 +84,6 @@ app.get('*', (req, res) => {
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
   res.status(500).json({ error: 'Internal server error' });
-});
-
-// ===== Initialize models (lazy, once) =====
-let modelsLoaded = false;
-async function ensureModels() {
-  if (modelsLoaded) return;
-  try {
-    await testConnection();
-    require('./models');
-    modelsLoaded = true;
-    console.log('✅ Models loaded successfully.');
-  } catch (error) {
-    console.error('❌ Failed to initialize models:', error.message);
-  }
-}
-
-// Middleware to ensure models are loaded before handling requests
-app.use(async (req, res, next) => {
-  await ensureModels();
-  next();
 });
 
 // ===== Start server (only when running locally, not on Vercel) =====

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { authMiddleware } = require('../auth/service');
-const { Project, Record, Work, Search, ScreeningEvent } = require('../models');
+const { Project, ProjectArticle, Work, Search, ScreeningEvent } = require('../models');
 
 // POST /api/backup/export
 router.post('/export', authMiddleware, async (req, res) => {
@@ -12,7 +12,7 @@ router.post('/export', authMiddleware, async (req, res) => {
     const projectIds = projects.map(p => p.id);
 
     const searches = await Search.findAll({ where: { user_id: userId } });
-    const records = await Record.findAll({
+    const records = await ProjectArticle.findAll({
       where: { project_id: projectIds },
       include: [{ model: Work, as: 'work' }]
     });
